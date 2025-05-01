@@ -237,37 +237,216 @@ void addBook(){
 		fclose(fp);
 		printf("Book adding successfully!\n");
 }
-void bookChooser(const char *bookname){
-	const char delimiter[2] = ",";
+void updateBook(){
+	char searchName[250];
 	char buffer[512];
-	char bookToCheck[100];
-	strcpy(bookToCheck, bookname);
-	bookToCheck[strcspn(bookToCheck, "\n")] = 0;
+	Book currentBook;
+	bool bookFound= false;
+	int choice;
+	char newValue[100];
 
-	FILE *fp = fopen("Users.dat", "r");
-	if (fp == NULL)
-	{
-		printf("Dosya acilamadi");
-	}
-	while (fgets(buffer, sizeof(buffer), fp) != NULL)
-	{
-		buffer[strcspn(buffer, "\n")] = 0;
-		char *id = strtok(buffer, delimiter);
-		char *name = strtok(NULL, delimiter);
-		(void)*id;
-		char *author = strtok(NULL, delimiter);
-		if (name != NULL)
+	printf("Guncellemek istediginiz kitabin ismini girinÇ: ");
+	fgets(searchName,sizeof(searchName),stdin);
+	searchName[strcspn(searchName,"\n")]=0; 
+
+	FILE *fp = fopen("Books.dat","r");
+	FILE *tempFp= fopen("temp_books.dat","w");
+
+    if (fp == NULL || tempFp == NULL) {
+        printf("Dosya acma hatasi!\n");
+        if (fp) fclose(fp); // Eğer fp açıldıysa kapat
+        if (tempFp) fclose(tempFp); // Eğer tempFp açıldıysa kapat
+        return; // Fonksiyondan çık
+    }
+	while(fgets(buffer,sizeof(buffer),fp)!=NULL){
+		char originalLine[512];
+		strcpy(originalLine,buffer);
+
+		char *bookid= strtok(buffer,",");
+		char *bookname=strtok(NULL,",");
+		char *author=strtok(NULL,",");
+		char *ctgry=strtok(NULL,",");
+		char *taken=strtok(NULL,",");
+		char *userId=strtok(NULL,",");
+		char *borrowDate=strtok(NULL,",");
+		char *returnDate=strtok(NULL,",");
+
+		if (bookid == NULL)	continue;
+		currentBook.bookId=atoi(bookid);
+		if(bookname == NULL) 
 		{
-			name[strcspn(name, "\n")] = 0;
-			if (strcmp(name, bookname) == 0)
-			{
-				fclose(fp);
+			fprintf(tempFp,"%s",originalLine);
+			continue;
+		}
+		strcpy(currentBook.bookName,bookname);
+		if(strcmp(currentBook.bookName,searchName)==0){
+			bookFound =1;
+			printf("Kitap bulundu ID:%d, Ad: %s",currentBook.bookId,currentBook.bookName);
+		
+		if(author) strcpy(currentBook.author,author); else strcpy(currentBook.author,"\0");
+		if(ctgry) strcpy(currentBook.ctgry,ctgry); else strcpy(currentBook.ctgry,"\0");
+		if(taken) currentBook.taken=atoi(taken); else currentBook.taken=false;
+		if(userId) currentBook.userId=atoi(userId); else currentBook.userId=-1;
+		if(borrowDate) strcpy(currentBook.borrowDate,borrowDate); else strcpy(currentBook.borrowDate,"\0");
+		if(returnDate){
+			returnDate[strcspn(returnDate,"\n")]='\0';
+			strcpy(currentBook.returnDate,returnDate);
+		}
+		else currentBook.returnDate[0] = '\0';
+
+		printf("Mevcut Yazar: %s\n", currentBook.author);
+        printf("Mevcut Kategori: %s\n", currentBook.ctgry);
+        printf("Hangi bilgiyi guncellemek istersiniz?\n");
+        printf("1. Kitap Adi\n");
+        printf("2. Yazar Adi\n");
+        printf("3. Kategori\n");
+        printf("Seciminiz: ");
+	
+		char choiceStr[10];
+        fgets(choiceStr, sizeof(choiceStr), stdin);
+        choice = atoi(choiceStr);
+
+		printf("Yeni degeri girin: ");
+        fgets(newValue, sizeof(newValue), stdin);
+    	newValue[strcspn(newValue, "\n")] = 0;
+
+		switch (choice)
+		{
+		case 1:
+			strcpy(currentBook.bookName,newValue);
+			break;
+		case 2:
+			strcpy(currentBook.author,newValue);
+			break;
+		case 3:
+			strcpy(currentBook.ctgry,newValue);
+			break;
+		default:
+			printf("Gecersiz Secim.");
+			fprintf(tempFp, "%s", originalLine);
+			continue;
+		}
+		fprintf(tempFp, "%d,%s,%s,%s,%d,%d,%s,%s\n", 
+			currentBook.bookId, currentBook.bookName, currentBook.author, 
+			currentBook.ctgry, currentBook.taken, currentBook.userId, 
+			currentBook.borrowDate, currentBook.returnDate);
+		}
+		else {
+            // Aranan kitap bu değilse, orijinal satırı olduğu gibi geçici dosyaya yaz
+            fprintf(tempFp, "%s", originalLine);
+        }
+	}
+	// Dosyaları kapat
+    fclose(fp);
+    fclose(tempFp);
+
+	if(bookFound){
+		if(remove("Books.dat")!=0){
+			printf("Eski Books.dat dosyasi silinemedi!\n");
+		}
+		else{			if(rename("temp_books.dat","Books.dat")!=0){
+				printf("Gecici dosya Books.dat olarak yeniden adlandirilamadi!\n");
+			}
+			else{
+				printf("Books.dat dosyasi basariyla guncellendi.\n");
 			}
 		}
 	}
-	fclose(fp);
+	else{
+		printf("'%s' adinda bir kitap bulunamadi.\n", searchName);
+		remove("tempBooks.dat");
+	}
 }
+void deleteBook(){
+	char searchName[250];
+	char buffer[512];
+	Book currentBook;
+	bool bookFound= false;
+	//int choice;
+	//char newValue[100];
 
+	printf("Silmek istediginiz kitabin ismini girin: ");
+	fgets(searchName,sizeof(searchName),stdin);
+	searchName[strcspn(searchName,"\n")]=0;
+
+	FILE *fp=fopen("Books.dat","r");
+	FILE *tempFp=fopen("temp_books.dat","w");
+
+	if(fp==NULL|| tempFp==NULL){
+		printf("Dosya acma hatasi!");
+		if(fp) fclose(fp);
+		if(tempFp) fclose(tempFp);
+		return;
+	}
+
+	while(fgets(buffer,sizeof(buffer),fp)!=NULL)
+	{
+		char originalLine[512];
+		strcpy(originalLine,buffer);
+
+		char *bookid= strtok(buffer,",");
+		char *bookname=strtok(NULL,",");
+		char *author=strtok(NULL,",");
+		char *ctgry=strtok(NULL,",");
+		char *taken=strtok(NULL,",");
+		char *userId=strtok(NULL,",");
+		char *borrowDate=strtok(NULL,",");
+		char *returnDate=strtok(NULL,",");
+
+		if (bookid == NULL)	continue;
+		currentBook.bookId=atoi(bookid);
+		
+		if(bookname == NULL) 
+		{
+			fprintf(tempFp,"%s",originalLine);
+			continue;
+		}
+		strcpy(currentBook.bookName,bookname);
+		if(author) strcpy(currentBook.author,author); else strcpy(currentBook.author,"\0");
+		if(ctgry) strcpy(currentBook.ctgry,ctgry); else strcpy(currentBook.ctgry,"\0");
+		if(taken) currentBook.taken=atoi(taken); else currentBook.taken=false;
+		if(userId) currentBook.userId=atoi(userId); else currentBook.userId=-1;
+		if(borrowDate) strcpy(currentBook.borrowDate,borrowDate); else strcpy(currentBook.borrowDate,"\0");
+		if(returnDate){
+			returnDate[strcspn(returnDate,"\n")]='\0';
+			strcpy(currentBook.returnDate,returnDate);
+		}
+		else currentBook.returnDate[0] = '\0';
+		
+		if(strcmp(currentBook.bookName,searchName)==0){
+			bookFound =1;
+			printf("Kitap silindi ID:%d, Ad: %s",currentBook.bookId,currentBook.bookName);
+			continue;
+		}
+		else{
+			fprintf(tempFp, "%s", originalLine);
+		}
+	}
+	// Dosyaları kapat
+    fclose(fp);
+    fclose(tempFp);
+	if(bookFound){
+		if(remove("Books.dat")!=0){
+			printf("Eski Books.dat dosyasi silinemedi!\n");
+		}
+		else{	
+			if(rename("temp_books.dat","Books.dat")!=0){
+				printf("Gecici dosya Books.dat olarak yeniden adlandirilamadi!\n");
+			}
+			else{
+				printf("Books.dat dosyasi basariyla guncellendi.\n");
+			}
+		}
+	}
+	else{
+		printf("'%s' adindaki kitap silinemedi.\n", searchName);
+		remove("tempBooks.dat");
+	}
+
+}
+void viewOutdatedBooks(){
+	
+}
 void adminChoose(int choice)
 {
 	switch (choice)
@@ -279,10 +458,10 @@ void adminChoose(int choice)
 		addBook();
 		break;
 	case 3:
-		// Update Book
+		updateBook();
 		break;
 	case 4:
-		// Delete Book
+		deleteBook();
 		break;
 	case 5:
 		// View outDate Books
