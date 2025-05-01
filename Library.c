@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include <time.h>
+
 int ID;
 int islogin = 0;
 int isAdmin = 0;
@@ -33,6 +35,87 @@ typedef struct
 	char borrowDate[100];
 	char returnDate[100];
 } Borrow;
+void searchBook(){
+	char searchName[250];//used
+	char buffer[512];//used
+	Book currentBook;//used
+	bool bookFound= false;//used
+	int choice;//used
+	char newValue[100];//used
+
+	printf("Nasil aramaya yapmak istersiniz?\n");
+	printf("1. Kitap adina göre\n");
+	printf("2. Yazar adina göre\n");
+	printf("3. Kategoriye göre\n");
+	printf("Seciminiz: ");
+	fgets(newValue, sizeof(newValue), stdin);
+	choice = atoi(newValue);
+	switch (choice)
+	{
+	case 1:
+		printf("Aramak istediginiz kitabin ismini girin: ");
+		fgets(searchName,sizeof(searchName),stdin);
+		searchName[strcspn(searchName,"\n")]=0;
+		break;
+	case 2:
+		printf("Aramak istediginiz yazar ismini girin: ");
+		fgets(searchName,sizeof(searchName),stdin);
+		searchName[strcspn(searchName,"\n")]=0;
+		break;
+	case 3:
+		printf("Aramak istediginiz kategori ismini girin: ");
+		fgets(searchName,sizeof(searchName),stdin);
+		searchName[strcspn(searchName,"\n")]=0;
+		break;
+	default:
+		printf("Gecersiz Secim.\n");
+		return;
+	}		
+
+	FILE *fp = fopen("Books.dat","r");
+	if (fp == NULL) {
+		printf("Dosya acma hatasi!\n");
+		return; // Fonksiyondan çık
+	}
+
+	while(fgets(buffer,sizeof(buffer),fp)!=NULL){
+		char originalLine[512];
+		strcpy(originalLine,buffer);
+
+		char *bookid= strtok(buffer,",");
+		char *bookname=strtok(NULL,",");
+		char *author=strtok(NULL,",");
+		char *ctgry=strtok(NULL,",");
+		char *taken=strtok(NULL,",");
+		char *userId=strtok(NULL,",");
+		char *borrowDate=strtok(NULL,",");
+		char *returnDate=strtok(NULL,",");
+
+		if (bookid == NULL)	continue;
+		currentBook.bookId=atoi(bookid);
+		if(bookname == NULL) 
+		{
+			continue;
+		}
+		strcpy(currentBook.bookName,bookname);
+		if(author) strcpy(currentBook.author,author); else strcpy(currentBook.author,"\0");
+		if(ctgry) strcpy(currentBook.ctgry,ctgry); else strcpy(currentBook.ctgry,"\0");
+		if(taken) currentBook.taken=atoi(taken); else currentBook.taken=false;
+		if(borrowDate) strcpy(currentBook.borrowDate,borrowDate); else strcpy(currentBook.borrowDate,"\0");
+		if(returnDate){
+			returnDate[strcspn(returnDate,"\n")]='\0';
+			strcpy(currentBook.returnDate,returnDate);
+		}
+		else currentBook.returnDate[0] = '\0';
+
+		if(strcmp(currentBook.bookName,searchName)==0){
+			bookFound =1;
+			printf("Kitap bulundu ID:%d, Ad: %s, Yazar: %s, Kategori: %s Raftami: %d",currentBook.bookId,currentBook.bookName,currentBook.author,currentBook.ctgry,currentBook.taken);
+			break;
+		}
+		
+	}
+}
 bool isEmailRegistered(const char *email)
 {
 	const char delimiter[2] = ",";
@@ -444,9 +527,57 @@ void deleteBook(){
 	}
 
 }
-void viewOutdatedBooks(){
-	
-}
+//bir süre deakftif
+/*void viewOutdatedBooks(){
+	char searchName[250];
+	char buffer[512];
+	Borrow currentBorrow;
+	bool bookFound= false;
+	int choice;
+	char newValue[100];
+
+	FILE *fp = fopen("Borrows.dat","r");
+
+
+	if (fp == NULL) {
+        printf("Dosya acma hatasi!\n");
+        if (fp) fclose(fp); // Eğer fp açıldıysa kapat
+        return; // Fonksiyondan çık
+    }
+
+	while(fgets(buffer,sizeof(buffer),fp)!=NULL)
+	{	
+		buffer[strcspn(buffer, "\n")] = 0;
+		char originalLine[512];
+		strcpy(originalLine,buffer);
+
+
+		char *borrowId_str = strtok(buffer,",");
+        char *userId_str = strtok(NULL,",");
+        char *bookId_str = strtok(NULL,",");
+        char *borrowDate_str = strtok(NULL,",");
+        char *returnDate_str = strtok(NULL,",");
+		if (borrowId_str == NULL)	continue;
+
+		currentBorrow.borrowId=atoi(borrowId_str);
+		if(userId_str) currentBorrow.userId=atoi(userId_str)	; else currentBorrow.userId=0;
+		if(bookId_str) currentBorrow.bookId=atoi(bookId_str); else currentBorrow.bookId=0;
+		if(borrowDate_str) strcpy(currentBorrow.borrowDate,borrowDate_str); else strcpy(currentBorrow.borrowDate,"\0");
+		if(returnDate_str){
+			returnDate_str[strcspn(returnDate_str,"\n")]='\0';
+			strcpy(currentBorrow.returnDate,returnDate_str);
+		}
+		else currentBorrow.returnDate[0] = '\0';
+
+		if (borrowId_str == NULL || userId_str == NULL || bookId_str == NULL || borrowDate_str == NULL || returnDate_str == NULL) {
+            fprintf(stderr, "Hatali satir (eksik alan): %s\n", originalLine);
+            continue;
+        }
+		
+		
+
+	}
+}*/
 void adminChoose(int choice)
 {
 	switch (choice)
@@ -473,7 +604,26 @@ void adminChoose(int choice)
 		printf("Invalid choice. Please try again.\n");
 	}
 }
-
+void userChoose(int choice)
+{
+	switch (choice)
+	{
+	case 1:
+		// Borrow Book
+		break;
+	case 2:
+		// Return Book
+		break;
+	case 3:
+		// View Borrowed Books
+		break;
+	case 4:
+		printf("Logging out...\n");
+		break;
+	default:
+		printf("Invalid choice. Please try again.\n");
+	}
+}
 int main()
 {
 	int choice = 0;
