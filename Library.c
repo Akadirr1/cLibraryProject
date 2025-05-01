@@ -3,6 +3,8 @@
 #include <stdbool.h>
 #include <string.h>
 int ID;
+int islogin = 0;
+int isAdmin = 0;
 typedef struct
 {
 	int userId;
@@ -125,7 +127,6 @@ void loginUser(int *islogin, int *isAdmin)
 	char email[250];
 	char password[250];
 	bool emailFound = false;
-	bool isAdmin = false;
 	printf("Enter your email: ");
 	fgets(email, sizeof(email), stdin);
 
@@ -202,8 +203,8 @@ void addBook(){
 	book.ctgry[strcspn(book.ctgry, "\n")] = 0;
 	book.taken = false;
 	book.userId = -1;
-	book.borrowDate[0] = '\0';
-	book.returnDate[0] = '\0';
+	book.borrowDate[0] = '0';
+	book.returnDate[0] = '0';
 	FILE *fp;
 	FILE *Idp = fopen("UniqueBookID.dat", "r");
 	if (Idp == NULL)
@@ -213,12 +214,60 @@ void addBook(){
 	}
 	else
 	{
-		book.bookId = ID;
-		ID++;
+		fscanf(Idp, "%d", &ID);
+			book.bookId = ID;
+			ID++;
 		fclose(Idp);
 	}
-	
+	Idp = fopen("UniqueBookID.dat", "w");
+		if (Idp == NULL)
+		{
+			printf("Dosya acilamadi");
+			return;
+		}
+		fprintf(Idp, "%d", ID);
+		fclose(Idp);
+	fp = fopen("Books.dat", "a+");
+		if (fp == NULL)
+		{
+			printf("Dosya acilamadi");
+			return;
+		}
+		fprintf(fp, "%d,%s,%s,%s,%d,%d,%s,%s \n", book.bookId, book.bookName,book.author, book.ctgry,book.taken,book.userId,book.borrowDate,book.returnDate);
+		fclose(fp);
+		printf("Book adding successfully!\n");
 }
+void bookChooser(const char *bookname){
+	const char delimiter[2] = ",";
+	char buffer[512];
+	char bookToCheck[100];
+	strcpy(bookToCheck, bookname);
+	bookToCheck[strcspn(bookToCheck, "\n")] = 0;
+
+	FILE *fp = fopen("Users.dat", "r");
+	if (fp == NULL)
+	{
+		printf("Dosya acilamadi");
+	}
+	while (fgets(buffer, sizeof(buffer), fp) != NULL)
+	{
+		buffer[strcspn(buffer, "\n")] = 0;
+		char *id = strtok(buffer, delimiter);
+		char *name = strtok(NULL, delimiter);
+		(void)*id;
+		char *author = strtok(NULL, delimiter);
+		if (name != NULL)
+		{
+			name[strcspn(name, "\n")] = 0;
+			if (strcmp(name, bookname) == 0)
+			{
+				fclose(fp);
+			}
+		}
+	}
+	fclose(fp);
+}
+
 void adminChoose(int choice)
 {
 	switch (choice)
@@ -227,7 +276,7 @@ void adminChoose(int choice)
 		registerUser(); 
 		break;
 	case 2:
-		// Add Book
+		addBook();
 		break;
 	case 3:
 		// Update Book
@@ -248,8 +297,6 @@ void adminChoose(int choice)
 
 int main()
 {
-	int islogin = 0;
-	int isAdmin = 0;
 	int choice = 0;
 	char choiceStr[10];
 	while (choice != 3)
@@ -273,7 +320,10 @@ int main()
 				printf("Login successful!\n");
 				printf("Welcome to the library system!\n");
 				if (isAdmin == 1)
-				{
+				{	
+					int adminChoice= 0;
+					do
+					{
 					printf("You are an admin\n choose the admin functions\n");
 					printf("1. Add User\n");
 					printf("2. Add Book\n");
@@ -281,10 +331,13 @@ int main()
 					printf("4. Delete Book\n");
 					printf("5. View outDate Books\n");
 					printf("6. Logout\n");
-					int adminChoice;
+					
 					fgets(choiceStr, sizeof(choiceStr), stdin);
 					adminChoice = atoi(choiceStr);
 					adminChoose(adminChoice);
+					} while (adminChoice!=6);
+					
+					continue;
 				}
 				else
 				{
