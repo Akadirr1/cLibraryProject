@@ -81,7 +81,7 @@ int isOutdate(char *takenDate, char *returnDate)
 		return 0; // non outdated
 	}
 }
-int isTaken(int ID)
+int  isTaken(int ID)
 {
 	char buffer[512];		// used
 	bool bookFound = false; // used
@@ -1168,7 +1168,8 @@ void returnBook(int userId)
 	int bookId;
 	char bookIdStr[100];
 	int istaken;
-
+	bool isUserBook = false;
+	
 	printf("Iade etmek istediginiz kitabin ID degerini girin:");
 	fgets(bookIdStr, sizeof(bookIdStr), stdin);
 	bookId = atoi(bookIdStr);
@@ -1177,14 +1178,50 @@ void returnBook(int userId)
 
 	if (istaken == 1)
 	{
-		// alinabilir
-		updateTakenBook(bookId, userId, 0);
+		FILE *fp = fopen("Books.dat", "r");
+        if (fp == NULL)
+        {
+            printf("Dosya acma hatasi!\n");
+            return;
+        }
+		char buffer[512];
+		while(fgets(buffer,sizeof(buffer),fp)!=NULL){
+			char *bookid_str = strtok(buffer, ",");
+            char *bookname = strtok(NULL, ",");
+            char *author = strtok(NULL, ",");
+            char *ctgry = strtok(NULL, ",");
+            char *taken = strtok(NULL, ",");
+            char *currentUserId = strtok(NULL, ",");
+			(void)*bookid_str;
+			(void)*bookname;
+			(void)*author;
+			(void)*ctgry;
+			(void)*taken;
+			if (bookid_str == NULL || currentUserId == NULL)
+                continue;
+
+			int currentBookId = atoi(bookid_str);
+			int userIdFromFile = atoi(currentUserId);
+
+			if(currentBookId==bookId && userIdFromFile==userId)
+			{
+				isUserBook = true;
+                break;
+			}
+		}
+		if(isUserBook){
+		// iade edilebilir
+		updateTakenBook(bookId, -1, 0);
 		removeBorrow(bookId, userId);
 		printf("Kitap iade edildi!\n");
+		}
+		else{
+			printf("Bu kitap sizin tarafinizdan odunc alinmamis!\n");
+		}
 	}
 	else if (istaken == 0)
 	{
-		printf("Bu kitap iade edilemez\n");
+		printf("Bu kitap zaten kutuphanede, iade edilemez\n");
 	}
 	else if (istaken == -1)
 	{
@@ -1192,6 +1229,10 @@ void returnBook(int userId)
 		// KITAP BULUNAMADI
 	}
 }
+void viewBorrowedBook(){
+
+}
+
 // bir süre deakftif
 /*void viewOutdatedBooks(){
 	char searchName[250];
