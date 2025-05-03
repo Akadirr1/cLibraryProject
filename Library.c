@@ -34,6 +34,86 @@ typedef struct
 	char borrowDate[100];
 	char returnDate[100];
 } Borrow;
+int userHowManyHaveBooks(int userID)
+{
+	Borrow currentBorrow;
+	FILE *fp;
+	char buffer[512];
+	currentBorrow.userId = userID;
+	int number = 0;
+	fp = fopen("Borrows.dat", "r");
+	if (fp == NULL)
+	{
+		printf("Dosya acilamadi");
+		return -1;
+	}
+	while (fgets(buffer, sizeof(buffer), fp))
+	{
+		char originalLine[512];
+		strcpy(originalLine, buffer);
+
+		char *borrowId = strtok(buffer, ",");
+		char *userId = strtok(NULL, ",");
+		char *bookId = strtok(NULL, ",");
+		char *borrowDate = strtok(NULL, ",");
+		char *returnDate = strtok(NULL, ",");
+		returnDate[strcspn(returnDate, "\n")] = '0';
+
+		currentBorrow.borrowId = atoi(borrowId);
+		currentBorrow.userId = atoi(userId);
+		currentBorrow.bookId = atoi(bookId);
+		strcpy(currentBorrow.borrowDate, borrowDate);
+		strcpy(currentBorrow.returnDate, returnDate);
+
+		if (currentBorrow.userId == userID)
+		{
+			number += 1;
+			continue;
+		}
+		else
+			continue;
+	}
+	fclose(fp);
+	return number;
+}
+int howManyUserRegistered()
+{
+	FILE *fp;
+	char buffer[512];
+	int number = 0;
+
+	fp = fopen("Users.dat", "r");
+	if (fp == NULL)
+	{
+		printf("Dosya acilamadi");
+		return -1;
+	}
+	while (fgets(buffer, sizeof(buffer), fp))
+	{
+		number++;
+	}
+	fclose(fp);
+	return number;
+}
+int howManyBooksAdded()
+{
+	FILE *fp;
+	char buffer[512];
+	int number = 0;
+
+	fp = fopen("Books.dat", "r");
+	if (fp == NULL)
+	{
+		printf("Dosya acilamadi");
+		return -1;
+	}
+	while (fgets(buffer, sizeof(buffer), fp))
+	{
+		number++;
+	}
+	fclose(fp);
+	return number;
+}
 void todaysDate(char *buffer, size_t size)
 {
 	time_t t;
@@ -465,12 +545,18 @@ bool isEmailRegistered(const char *email)
 }
 void registerUser()
 {
+	int ManyUser = howManyUserRegistered();
+	if (ManyUser >= 100)
+	{
+		printf("100 Kullanicidan fazla kayit olamaz\n");
+		return;
+	}
 	User user;
 	printf("Enter your name: \n");
 	fgets(user.name, sizeof(user.name), stdin);
 	user.name[strcspn(user.name, "\n")] = 0;
-
-	if(strlen(user.name)==0){
+	if (strlen(user.name) == 0)
+	{
 		printf("Isim bos olamaz!!!");
 		printf("Kayit basarisiz!!!");
 		return;
@@ -478,7 +564,8 @@ void registerUser()
 	printf("Enter your email: \n");
 	fgets(user.email, sizeof(user.email), stdin);
 	user.email[strcspn(user.email, "\n")] = 0;
-	if(strlen(user.email) == 0){
+	if (strlen(user.email) == 0)
+	{
 		printf("Email bos olamaz!!!");
 		printf("Kayit basarisiz!!!");
 		return;
@@ -492,7 +579,8 @@ void registerUser()
 		printf("Enter your password: ");
 		fgets(user.password, sizeof(user.password), stdin);
 		user.password[strcspn(user.password, "\n")] = 0;
-        if(strlen(user.password) == 0){
+		if (strlen(user.password) == 0)
+		{
 			printf("Kayit basarisiz!!!");
 			printf("Parola bos olamaz!!!");
 			return;
@@ -606,6 +694,12 @@ int loginUser(int *islogin, int *isAdmin)
 }
 void addBook()
 {
+	int ManyBooks = howManyBooksAdded();
+	if (ManyBooks >= 500)
+	{
+		printf("5 kitaptan fazlasi eklenemez!!\n");
+		return;
+	}
 	Book book;
 	printf("Enter book name: ");
 	fgets(book.bookName, sizeof(book.bookName), stdin);
@@ -762,7 +856,7 @@ void updateTakenBook(int ID, int userID, int take)
 		printf("'%d' ID'sine sahip bir kitap bulunamadi.\n", ID);
 		if (remove("temp_books.dat") != 0)
 		{
-			perror("Geçici dosya silme hatası");
+			perror("Gecici dosya silme hatasi");
 		}
 	}
 }
@@ -1022,17 +1116,17 @@ void updateBook()
 	{
 		if (remove("Books.dat") != 0)
 		{
-			//printf("Eski Books.dat dosyasi silinemedi!\n");
+			// printf("Eski Books.dat dosyasi silinemedi!\n");
 		}
 		else
 		{
 			if (rename("temp_books.dat", "Books.dat") != 0)
 			{
-				//printf("Gecici dosya Books.dat olarak yeniden adlandirilamadi!\n");
+				// printf("Gecici dosya Books.dat olarak yeniden adlandirilamadi!\n");
 			}
 			else
 			{
-				//printf("Books.dat dosyasi basariyla guncellendi.\n");
+				// printf("Books.dat dosyasi basariyla guncellendi.\n");
 			}
 		}
 	}
@@ -1051,7 +1145,7 @@ void deleteBook()
 	// int choice;
 	// char newValue[100];
 
-	printf("Silmek istediginiz kitabin ismini girin: ");
+	printf("Silmek istediginiz kitabin ID girin: ");
 	fgets(searchName, sizeof(searchName), stdin);
 	searchName[strcspn(searchName, "\n")] = 0;
 
@@ -1120,10 +1214,11 @@ void deleteBook()
 		else
 			currentBook.returnDate[0] = '\0';
 
-		if (strcmp(currentBook.bookName, searchName) == 0)
+		if (strcmp(bookid, searchName) == 0)
 		{
 			bookFound = 1;
-			printf("Kitap silindi ID:%d, Ad: %s", currentBook.bookId, currentBook.bookName);
+			removeBorrow(currentBook.bookId,currentBook.userId);
+			printf("Kitap silindi ID:%d, Ad: %s\n", currentBook.bookId, currentBook.bookName);
 			continue;
 		}
 		else
@@ -1163,19 +1258,26 @@ void borrowBook(int userId)
 	int bookId;
 	char bookIdStr[100];
 	int istaken;
-
+	int userhowmanyhave = 0;
 	printf("Odunc almak istediginiz kitabin ID degerini girin:");
 	fgets(bookIdStr, sizeof(bookIdStr), stdin);
 	bookId = atoi(bookIdStr);
 
 	istaken = isTaken(bookId);
-
+	userhowmanyhave = userHowManyHaveBooks(userId);
 	if (istaken == 0)
 	{
-		// alinabilir
-		updateTakenBook(bookId, userId, 1);
-		makeBorrow(bookId, userId);
-		printf("Kitap odunc alindi teslim icin 15 gununuz var!!!\n");
+		if (userhowmanyhave < 3)
+		{
+			// alinabilir
+			updateTakenBook(bookId, userId, 1);
+			makeBorrow(bookId, userId);
+			printf("Kitap odunc alindi teslim icin 15 gununuz var!!!\n");
+		}
+		else
+		{
+			printf("Kitap odunc alamazsiniz 3 Adet kitap odunc almissiniz!\n");
+		}
 	}
 	else if (istaken == 1)
 	{
@@ -1290,13 +1392,11 @@ void viewBorrowedBook(int userId)
 		{
 			printf("ID: %d, Kitap Adi: %s, Yazar: %s, Kategori: %s\n", currentBookId, bookname, author, ctgry);
 			// isUserBook = true; KULLANILACAK
-			break;
+			continue;
 		}
 	}
 	fclose(fp);
 }
-
-// bir süre deakftif
 void viewOutdatedBooks()
 {
 	char buffer[512];
