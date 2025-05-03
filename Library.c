@@ -863,7 +863,7 @@ void makeBorrow(int bookID, int userID)
 {
 	Borrow currentBorrow;
 	FILE *fp;
-	FILE *Idp = fopen("UniqueBorrowID.dat", "r");
+	FILE *Idp = fopen("UniqueBorrowID.dat", "w");
 	if (Idp == NULL)
 	{
 		printf("Dosya acilamadi");
@@ -874,16 +874,9 @@ void makeBorrow(int bookID, int userID)
 		fscanf(Idp, "%d", &ID);
 		currentBorrow.borrowId = ID;
 		ID++;
+		fprintf(Idp, "%d", ID);
 		fclose(Idp);
 	}
-	Idp = fopen("UniqueUserID.dat", "w");
-	if (Idp == NULL)
-	{
-		printf("Dosya acilamadi");
-		return;
-	}
-	fprintf(Idp, "%d", ID);
-	fclose(Idp);
 	currentBorrow.userId = userID;
 	currentBorrow.bookId = bookID;
 	todaysDate(currentBorrow.borrowDate, sizeof(currentBorrow.borrowDate));
