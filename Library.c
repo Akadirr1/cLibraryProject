@@ -697,7 +697,7 @@ void addBook()
 	int ManyBooks = howManyBooksAdded();
 	if (ManyBooks >= 500)
 	{
-		printf("5 kitaptan fazlasi eklenemez!!\n");
+		printf("500 kitaptan fazlasi eklenemez!!\n");
 		return;
 	}
 	Book book;
@@ -712,8 +712,7 @@ void addBook()
 	book.ctgry[strcspn(book.ctgry, "\n")] = 0;
 	book.taken = false;
 	book.userId = -1;
-	book.borrowDate[0] = '0';
-	book.returnDate[0] = '0';
+
 	FILE *fp;
 	FILE *Idp = fopen("UniqueBookID.dat", "r");
 	if (Idp == NULL)
@@ -742,7 +741,7 @@ void addBook()
 		printf("Dosya acilamadi");
 		return;
 	}
-	fprintf(fp, "%d,%s,%s,%s,%d,%d,%s,%s \n", book.bookId, book.bookName, book.author, book.ctgry, book.taken, book.userId, book.borrowDate, book.returnDate);
+	fprintf(fp, "%d,%s,%s,%s,%d,%d,%d,%d \n", book.bookId, book.bookName, book.author, book.ctgry, book.taken, book.userId, 0, 0);
 	fclose(fp);
 	printf("Book adding successfully!\n");
 }
