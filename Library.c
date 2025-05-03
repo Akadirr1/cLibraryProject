@@ -3,7 +3,6 @@
 #include <stdbool.h>
 #include <string.h>
 #include <time.h>
-
 int ID;
 int islogin = 0;
 int isAdmin = 0;
@@ -56,32 +55,36 @@ void later15Day(char *buffer, size_t size)
 
 	strftime(buffer, size, "%Y-%m-%d", zaman_bilgisi);
 }
-int isOutdate(char *takenDate, char *returnDate)
+int isOutdate(char *returnDate, char *currentDate, long int *howmany)
 {
 	struct tm tm1 = {0}, tm2 = {0};
+	int year1, mon1, day1, year2, mon2, day2;
+	
+	sscanf(returnDate, "%d-%d-%d", &year1, &mon1, &day1);
+	sscanf(currentDate, "%d-%d-%d", &year2, &mon2, &day2);
 
-	sscanf(takenDate, "%d-%d-%d", &tm1.tm_year, &tm1.tm_mon, &tm1.tm_mday);
-	sscanf(returnDate, "%d-%d-%d", &tm2.tm_year, &tm2.tm_mon, &tm2.tm_mday);
+	tm1.tm_year = year1 - 1900; // bu yapi yili 1900den sonra tuttugu icin 2025 yerine 2025-1900 ile 125 olarak tutmak gerek.
+	tm1.tm_mon = mon1 - 1;
+	tm1.tm_mday = day1;
+	tm2.tm_year = year2 - 1900;
+	tm2.tm_mon = mon2 - 1;  // bu yapi aylari 0-11 arasi tutuyor biz strignten 1-12 arasi cekiyoruz o yuzden -1 ile ceviriyoruz.
+	tm2.tm_mday = day2;
 
-	tm1.tm_year -= 1900; // bu yapi yili 1900den sonra tuttugu icin 2025 yerine 2025-1900 ile 125 olarak tutmak gerek.
-	tm2.tm_year -= 1900;
-	tm1.tm_mon -= 1; // bu yapi aylari 0-11 arasi tutuyor biz strignten 1-12 arasi cekiyoruz o yuzden -1 ile ceviriyoruz.
-	tm2.tm_mon -= 1;
+	time_t time1 = mktime(&tm1);// Son teslim tarihi
+    time_t time2 = mktime(&tm2);  // Bugün
 
-	time_t time1 = mktime(&tm1);
-	time_t time2 = mktime(&tm2);
-
-	double diffDate = difftime(time2, time1) / (24 * 60 * 60);
-	if (diffDate > 15)
-	{
-		return 1; // outdated
-	}
-	else
-	{
-		return 0; // non outdated
-	}
+	long int diffDate = difftime(time2, time1) / (24 * 60 * 60);
+	*howmany = diffDate;
+	if (diffDate > 0)
+    {
+        return 1; // Son teslim tarihinden sonra (gecikmiş)
+    }
+    else
+    {
+        return 0; // Son teslim tarihinden önce veya aynı gün (gecikme yok)
+    }
 }
-int  isTaken(int ID)
+int isTaken(int ID)
 {
 	char buffer[512];		// used
 	bool bookFound = false; // used
@@ -674,7 +677,7 @@ void updateTakenBook(int ID, int userID, int take)
 		strcpy(currentBook.bookName, bookname);
 		if (currentBook.bookId == ID)
 		{
-			bookFound = 1;
+			bookFound = true;
 			if (author)
 				strcpy(currentBook.author, author);
 			else
@@ -722,24 +725,27 @@ void updateTakenBook(int ID, int userID, int take)
 	{
 		if (remove("Books.dat") != 0)
 		{
-			// printf("Eski Books.dat dosyasi silinemedi!\n");
+			printf("Eski Books.dat dosyasi silinemedi!\n");
 		}
 		else
 		{
 			if (rename("temp_books.dat", "Books.dat") != 0)
 			{
-				// printf("Gecici dosya Books.dat olarak yeniden adlandirilamadi!\n");
+				printf("Gecici dosya Books.dat olarak yeniden adlandirilamadi!\n");
 			}
 			else
 			{
-				// printf("Books.dat dosyasi basariyla guncellendi.\n");
+				printf("Books.dat dosyasi basariyla guncellendi.\n");
 			}
 		}
 	}
 	else
 	{
 		printf("'%d' ID'sine sahip bir kitap bulunamadi.\n", ID);
-		remove("tempBooks.dat");
+		if (remove("temp_books.dat") != 0)
+		{
+			perror("Geçici dosya silme hatası");
+		}
 	}
 }
 void makeBorrow(int bookID, int userID)
@@ -831,7 +837,7 @@ void removeBorrow(int bookID, int userID)
 		if (userID == currentBorrow.userId && bookID == currentBorrow.bookId)
 		{
 			bookFound = true;
-			printf("Kitap iade edildi ID:%d", currentBorrow.userId);
+			printf("Kitap iade edildi ID:%d\n", currentBorrow.userId);
 			continue;
 		}
 		else
@@ -1015,7 +1021,7 @@ void updateBook()
 	else
 	{
 		printf("'%s' adinda bir kitap bulunamadi.\n", searchName);
-		remove("tempBooks.dat");
+		remove("temp_books.dat");
 	}
 }
 void deleteBook()
@@ -1131,7 +1137,7 @@ void deleteBook()
 	else
 	{
 		printf("'%s' adindaki kitap silinemedi.\n", searchName);
-		remove("tempBooks.dat");
+		remove("temp_books.dat");
 	}
 }
 void borrowBook(int userId)
@@ -1169,7 +1175,7 @@ void returnBook(int userId)
 	char bookIdStr[100];
 	int istaken;
 	bool isUserBook = false;
-	
+
 	printf("Iade etmek istediginiz kitabin ID degerini girin:");
 	fgets(bookIdStr, sizeof(bookIdStr), stdin);
 	bookId = atoi(bookIdStr);
@@ -1178,44 +1184,49 @@ void returnBook(int userId)
 
 	if (istaken == 1)
 	{
+		printf("bumbeee");
 		FILE *fp = fopen("Books.dat", "r");
-        if (fp == NULL)
-        {
-            printf("Dosya acma hatasi!\n");
-            return;
-        }
+		if (fp == NULL)
+		{
+			printf("Dosya acma hatasi!\n");
+			return;
+		}
 		char buffer[512];
-		while(fgets(buffer,sizeof(buffer),fp)!=NULL){
+		while (fgets(buffer, sizeof(buffer), fp) != NULL)
+		{
 			char *bookid_str = strtok(buffer, ",");
-            char *bookname = strtok(NULL, ",");
-            char *author = strtok(NULL, ",");
-            char *ctgry = strtok(NULL, ",");
-            char *taken = strtok(NULL, ",");
-            char *currentUserId = strtok(NULL, ",");
+			char *bookname = strtok(NULL, ",");
+			char *author = strtok(NULL, ",");
+			char *ctgry = strtok(NULL, ",");
+			char *taken = strtok(NULL, ",");
+			char *currentUserId = strtok(NULL, ",");
 			(void)*bookid_str;
 			(void)*bookname;
 			(void)*author;
 			(void)*ctgry;
 			(void)*taken;
 			if (bookid_str == NULL || currentUserId == NULL)
-                continue;
+				continue;
 
 			int currentBookId = atoi(bookid_str);
 			int userIdFromFile = atoi(currentUserId);
 
-			if(currentBookId==bookId && userIdFromFile==userId)
+			if (currentBookId == bookId && userIdFromFile == userId)
 			{
 				isUserBook = true;
-                break;
+				break;
 			}
 		}
-		if(isUserBook){
-		// iade edilebilir
-		updateTakenBook(bookId, -1, 0);
-		removeBorrow(bookId, userId);
-		printf("Kitap iade edildi!\n");
+
+		fclose(fp);
+		if (isUserBook)
+		{
+			// iade edilebilir
+			removeBorrow(bookId, userId);
+			updateTakenBook(bookId, -1, 0);
 		}
-		else{
+		else
+		{
 			printf("Bu kitap sizin tarafinizdan odunc alinmamis!\n");
 		}
 	}
@@ -1229,61 +1240,114 @@ void returnBook(int userId)
 		// KITAP BULUNAMADI
 	}
 }
-void viewBorrowedBook(){
+void viewBorrowedBook(int userId)
+{
+	// int isUserBook= 0; KULLANILACAK
+	FILE *fp = fopen("Books.dat", "r");
+	if (fp == NULL)
+	{
+		printf("Dosya acma hatasi!\n");
+		return;
+	}
+	char buffer[512];
+	while (fgets(buffer, sizeof(buffer), fp) != NULL)
+	{
+		char *bookid_str = strtok(buffer, ",");
+		char *bookname = strtok(NULL, ",");
+		char *author = strtok(NULL, ",");
+		char *ctgry = strtok(NULL, ",");
+		char *taken = strtok(NULL, ",");
+		char *currentUserId = strtok(NULL, ",");
+		(void)*bookid_str;
+		(void)*bookname;
+		(void)*author;
+		(void)*ctgry;
+		(void)*taken;
+		if (bookid_str == NULL || currentUserId == NULL)
+			continue;
 
+		int currentBookId = atoi(bookid_str);
+		int userIdFromFile = atoi(currentUserId);
+
+		if (userIdFromFile == userId)
+		{
+			printf("ID: %d, Kitap Adi: %s, Yazar: %s, Kategori: %s\n", currentBookId, bookname, author, ctgry);
+			// isUserBook = true; KULLANILACAK
+			break;
+		}
+	}
+	fclose(fp);
 }
 
 // bir süre deakftif
-/*void viewOutdatedBooks(){
-	char searchName[250];
+void viewOutdatedBooks(){
 	char buffer[512];
 	Borrow currentBorrow;
-	bool bookFound= false;
-	int choice;
-	char newValue[100];
 
-	FILE *fp = fopen("Borrows.dat","r");
+	FILE *fp = fopen("Borrows.dat", "r");
 
-
-	if (fp == NULL) {
+	if (fp == NULL)
+	{
 		printf("Dosya acma hatasi!\n");
-		if (fp) fclose(fp); // Eğer fp açıldıysa kapat
-		return; // Fonksiyondan çık
+		if (fp)
+			fclose(fp); // Eğer fp açıldıysa kapat
+		return;			// Fonksiyondan çık
 	}
 
-	while(fgets(buffer,sizeof(buffer),fp)!=NULL)
+	while (fgets(buffer, sizeof(buffer), fp) != NULL)
 	{
 		buffer[strcspn(buffer, "\n")] = 0;
 		char originalLine[512];
-		strcpy(originalLine,buffer);
+		strcpy(originalLine, buffer);
 
+		char *borrowId_str = strtok(buffer, ",");
+		char *userId_str = strtok(NULL, ",");
+		char *bookId_str = strtok(NULL, ",");
+		char *borrowDate_str = strtok(NULL, ",");
+		char *returnDate_str = strtok(NULL, ",");
+		if (borrowId_str == NULL)
+			continue;
 
-		char *borrowId_str = strtok(buffer,",");
-		char *userId_str = strtok(NULL,",");
-		char *bookId_str = strtok(NULL,",");
-		char *borrowDate_str = strtok(NULL,",");
-		char *returnDate_str = strtok(NULL,",");
-		if (borrowId_str == NULL)	continue;
-
-		currentBorrow.borrowId=atoi(borrowId_str);
-		if(userId_str) currentBorrow.userId=atoi(userId_str)	; else currentBorrow.userId=0;
-		if(bookId_str) currentBorrow.bookId=atoi(bookId_str); else currentBorrow.bookId=0;
-		if(borrowDate_str) strcpy(currentBorrow.borrowDate,borrowDate_str); else strcpy(currentBorrow.borrowDate,"\0");
-		if(returnDate_str){
-			returnDate_str[strcspn(returnDate_str,"\n")]='\0';
-			strcpy(currentBorrow.returnDate,returnDate_str);
+		currentBorrow.borrowId = atoi(borrowId_str);
+		if (userId_str)
+			currentBorrow.userId = atoi(userId_str);
+		else
+			currentBorrow.userId = 0;
+		if (bookId_str)
+			currentBorrow.bookId = atoi(bookId_str);
+		else
+			currentBorrow.bookId = 0;
+		if (borrowDate_str)
+			strcpy(currentBorrow.borrowDate, borrowDate_str);
+		else
+			strcpy(currentBorrow.borrowDate, "\0");
+		if (returnDate_str)
+		{
+			returnDate_str[strcspn(returnDate_str, "\n")] = '\0';
+			strcpy(currentBorrow.returnDate, returnDate_str);
 		}
-		else currentBorrow.returnDate[0] = '\0';
+		else
+			currentBorrow.returnDate[0] = '\0';
 
-		if (borrowId_str == NULL || userId_str == NULL || bookId_str == NULL || borrowDate_str == NULL || returnDate_str == NULL) {
-			fprintf(stderr, "Hatali satir (eksik alan): %s\n", originalLine);
+		if (borrowId_str == NULL || userId_str == NULL || bookId_str == NULL || borrowDate_str == NULL || returnDate_str == NULL)
+		{
+			printf("Hatali alan");
 			continue;
 		}
-
-
-
+		else
+		{
+			char Today[100];
+			todaysDate(Today, sizeof(Today));
+			long int howmanydate;
+			int isoutdate = isOutdate(returnDate_str, Today, &howmanydate);
+			if (isoutdate)
+			{
+				printf("BookID: %d, UserID: %d, BorrowID: %d, BorrowDate: %s, ReturnDate: %s, How many days outdate: %li\n", currentBorrow.bookId, currentBorrow.userId, currentBorrow.borrowId, currentBorrow.borrowDate, currentBorrow.returnDate, howmanydate);
+			}
+		}
 	}
-}*/
+	fclose(fp);
+}
 void adminChoose(int choice)
 {
 	switch (choice)
@@ -1301,7 +1365,7 @@ void adminChoose(int choice)
 		deleteBook();
 		break;
 	case 5:
-		// View outDate Books
+		viewOutdatedBooks();
 		break;
 	case 6:
 		printf("Logging out...\n");
@@ -1336,7 +1400,7 @@ void userChoose(int userid)
 			returnBook(userid);
 			break;
 		case 4:
-			// View Borrowed Books
+			viewBorrowedBook(userid);
 			break;
 		case 5:
 			choice = -1;
