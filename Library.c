@@ -1209,7 +1209,7 @@ void deleteBook()
 		if (strcmp(bookid, searchName) == 0)
 		{
 			bookFound = 1;
-			removeBorrow(currentBook.bookId,currentBook.userId);
+			removeBorrow(currentBook.bookId, currentBook.userId);
 			printf("Kitap silindi ID:%d, Ad: %s\n", currentBook.bookId, currentBook.bookName);
 			continue;
 		}
@@ -1438,6 +1438,88 @@ void viewOutdatedBooks()
 		}
 		else
 			currentBorrow.returnDate[0] = '\0';
+		if (borrowId_str == NULL || userId_str == NULL || bookId_str == NULL || borrowDate_str == NULL || returnDate_str == NULL)
+		{
+			printf("Hatali alan");
+			continue;
+		}
+		else
+		{
+			char Today[100];
+			todaysDate(Today, sizeof(Today));
+			long int howmanydate;
+			int isoutdate = isOutdate(returnDate_str, Today, &howmanydate);
+			if (isoutdate)
+			{
+				// FILE *atf = fopen("Attention.dat", "a+");
+				// if (atf)
+				//{
+				//	fprintf(atf, "%d,%d,%d,%s,%s,%li\n", currentBorrow.bookId, currentBorrow.userId, currentBorrow.borrowId, currentBorrow.borrowDate, currentBorrow.returnDate, howmanydate);
+
+				//}
+				// else
+				//{
+				//	printf("Uyari dosyasi acilamadi!!");
+				//}
+				// fclose(atf);
+
+				printf("BookID: %d, UserID: %d, BorrowID: %d, BorrowDate: %s, ReturnDate: %s, How many days outdate: %li\n", currentBorrow.bookId, currentBorrow.userId, currentBorrow.borrowId, currentBorrow.borrowDate, currentBorrow.returnDate, howmanydate);
+			}
+		}
+	}
+	fclose(fp);
+}
+void saveOutDatedBooks()
+{
+	char buffer[512];
+	Borrow currentBorrow;
+
+	FILE *fp = fopen("Borrows.dat", "r");
+	FILE *odb = fopen("OutDatedBooks.dat", "w");
+	if (fp == NULL || odb == NULL)
+	{
+		printf("Dosya acma hatasi!\n");
+		if (fp)
+			fclose(fp); // Eğer fp açıldıysa kapat
+		if (odb)
+			fclose(odb); // Eğer odb açıldıysa kapat
+		return;			 // Fonksiyondan çık
+	}
+
+	while (fgets(buffer, sizeof(buffer), fp) != NULL)
+	{
+		buffer[strcspn(buffer, "\n")] = 0;
+		char originalLine[512];
+		strcpy(originalLine, buffer);
+
+		char *borrowId_str = strtok(buffer, ",");
+		char *userId_str = strtok(NULL, ",");
+		char *bookId_str = strtok(NULL, ",");
+		char *borrowDate_str = strtok(NULL, ",");
+		char *returnDate_str = strtok(NULL, ",");
+		if (borrowId_str == NULL)
+			continue;
+
+		currentBorrow.borrowId = atoi(borrowId_str);
+		if (userId_str)
+			currentBorrow.userId = atoi(userId_str);
+		else
+			currentBorrow.userId = 0;
+		if (bookId_str)
+			currentBorrow.bookId = atoi(bookId_str);
+		else
+			currentBorrow.bookId = 0;
+		if (borrowDate_str)
+			strcpy(currentBorrow.borrowDate, borrowDate_str);
+		else
+			strcpy(currentBorrow.borrowDate, "\0");
+		if (returnDate_str)
+		{
+			returnDate_str[strcspn(returnDate_str, "\n")] = '\0';
+			strcpy(currentBorrow.returnDate, returnDate_str);
+		}
+		else
+			currentBorrow.returnDate[0] = '\0';
 
 		if (borrowId_str == NULL || userId_str == NULL || bookId_str == NULL || borrowDate_str == NULL || returnDate_str == NULL)
 		{
@@ -1452,7 +1534,91 @@ void viewOutdatedBooks()
 			int isoutdate = isOutdate(returnDate_str, Today, &howmanydate);
 			if (isoutdate)
 			{
-				printf("BookID: %d, UserID: %d, BorrowID: %d, BorrowDate: %s, ReturnDate: %s, How many days outdate: %li\n", currentBorrow.bookId, currentBorrow.userId, currentBorrow.borrowId, currentBorrow.borrowDate, currentBorrow.returnDate, howmanydate);
+				// FILE *atf = fopen("Attention.dat", "a+");
+				// if (atf)
+				//{
+				//	fprintf(atf, "%d,%d,%d,%s,%s,%li\n", currentBorrow.bookId, currentBorrow.userId, currentBorrow.borrowId, currentBorrow.borrowDate, currentBorrow.returnDate, howmanydate);
+
+				//}
+				// else
+				//{
+				//	printf("Uyari dosyasi acilamadi!!");
+				//}
+				// fclose(atf);
+
+				fprintf(odb, "%d,%d,%d,%s,%s\n", currentBorrow.bookId, currentBorrow.userId, currentBorrow.borrowId, currentBorrow.borrowDate, currentBorrow.returnDate);
+			}
+		}
+	}
+	fclose(fp);
+	fclose(odb);
+}
+void GiveAttention(int userID)
+{
+	char buffer[512];
+	Borrow currentBorrow;
+
+	FILE *fp = fopen("OutDatedBooks.dat", "r");
+
+	if (fp == NULL)
+	{
+		printf("Dosya acma hatasi!\n");
+		if (fp)
+			fclose(fp); // Eğer fp açıldıysa kapat
+		return;			// Fonksiyondan çık
+	}
+
+	while (fgets(buffer, sizeof(buffer), fp) != NULL)
+	{
+		buffer[strcspn(buffer, "\n")] = 0;
+		char originalLine[512];
+		strcpy(originalLine, buffer);
+
+		char *borrowId_str = strtok(buffer, ",");
+		char *userId_str = strtok(NULL, ",");
+		char *bookId_str = strtok(NULL, ",");
+		char *borrowDate_str = strtok(NULL, ",");
+		char *returnDate_str = strtok(NULL, ",");
+		returnDate_str[strcspn(returnDate_str, "\n")] = '\0';
+		if (borrowId_str == NULL)
+			continue;
+
+		currentBorrow.borrowId = atoi(borrowId_str);
+		if (userId_str)
+			currentBorrow.userId = atoi(userId_str);
+		else
+			currentBorrow.userId = 0;
+		if (bookId_str)
+			currentBorrow.bookId = atoi(bookId_str);
+		else
+			currentBorrow.bookId = 0;
+		if (borrowDate_str)
+			strcpy(currentBorrow.borrowDate, borrowDate_str);
+		else
+			strcpy(currentBorrow.borrowDate, "\0");
+		if (returnDate_str)
+		{
+			strcpy(currentBorrow.returnDate, returnDate_str);
+		}
+		else
+			currentBorrow.returnDate[0] = '\0';
+		if (borrowId_str == NULL || userId_str == NULL || bookId_str == NULL || borrowDate_str == NULL || returnDate_str == NULL)
+		{
+			printf("Hatali alan");
+			continue;
+		}
+		else
+		{
+			char Today[100];
+			todaysDate(Today, sizeof(Today));
+			long int howmanydate;
+			int isoutdate = isOutdate(returnDate_str, Today, &howmanydate);
+			if (isoutdate)
+			{
+				if (userID == currentBorrow.userId)
+				{
+					printf("%d ID degerine sahip kitabin teslim suresi %li gun gecti!!\n", currentBorrow.bookId, howmanydate);
+				}
 			}
 		}
 	}
@@ -1478,6 +1644,9 @@ void adminChoose(int choice)
 		viewOutdatedBooks();
 		break;
 	case 6:
+		saveOutDatedBooks();
+		break;
+	case 7:
 		printf("Logging out...\n");
 		break;
 	default:
@@ -1491,6 +1660,7 @@ void userChoose(int userid)
 
 	while (choice != -1)
 	{
+		GiveAttention(userid);
 		printf("1. Search Book\n");
 		printf("2. Borrow Book\n");
 		printf("3. Return Book\n");
@@ -1557,12 +1727,13 @@ int main()
 						printf("3. Update Book\n");
 						printf("4. Delete Book\n");
 						printf("5. View outDate Books\n");
-						printf("6. Logout\n");
+						printf("6. Attempt Users\n");
+						printf("7. Logout\n");
 
 						fgets(choiceStr, sizeof(choiceStr), stdin);
 						adminChoice = atoi(choiceStr);
 						adminChoose(adminChoice);
-					} while (adminChoice != 6);
+					} while (adminChoice != 7);
 
 					continue;
 				}
