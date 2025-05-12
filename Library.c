@@ -1559,12 +1559,15 @@ void GiveAttention(int userID)
 	Borrow currentBorrow;
 
 	FILE *fp = fopen("OutDatedBooks.dat", "r");
+	FILE *tempf = fopen("tempoutdatedbooks.dat","w");
 
-	if (fp == NULL)
+	if (fp == NULL || tempf == NULL)
 	{
 		printf("Dosya acma hatasi!\n");
 		if (fp)
 			fclose(fp); // Eğer fp açıldıysa kapat
+		if (tempf)
+			fclose(tempf); // Eğer tempf açıldıysa kapat
 		return;			// Fonksiyondan çık
 	}
 
@@ -1619,10 +1622,26 @@ void GiveAttention(int userID)
 				{
 					printf("%d ID degerine sahip kitabin teslim suresi %li gun gecti!!\n", currentBorrow.bookId, howmanydate);
 				}
+				else{
+				fprintf(tempf,"%s",originalLine);
+				}
 			}
 		}
 	}
 	fclose(fp);
+	fclose(tempf);
+
+	if(remove("OutDatedBooks.dat")==0){
+		if(rename("tempoutdatedbooks.dat","OutDatedBooks.dat")==0){
+			printf("dosya yeniden adlandirildi!");
+		}
+		else{
+			printf("dosya yeniden adlandirilamadi!");
+		}
+	}
+	else{
+		printf("dosya silinemedi!");		
+	}
 }
 void adminChoose(int choice)
 {
