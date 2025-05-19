@@ -552,7 +552,7 @@ void registerUser()
 		return;
 	}
 	User user;
-	printf("Enter your name: \n");
+	printf("Enter name: \n");
 	fgets(user.name, sizeof(user.name), stdin);
 	user.name[strcspn(user.name, "\n")] = 0;
 	if (strlen(user.name) == 0)
@@ -561,7 +561,7 @@ void registerUser()
 		printf("Kayit basarisiz!!!");
 		return;
 	}
-	printf("Enter your email: \n");
+	printf("Enter email: \n");
 	fgets(user.email, sizeof(user.email), stdin);
 	user.email[strcspn(user.email, "\n")] = 0;
 	if (strlen(user.email) == 0)
@@ -576,7 +576,7 @@ void registerUser()
 	}
 	else
 	{
-		printf("Enter your password: ");
+		printf("Enter password: ");
 		fgets(user.password, sizeof(user.password), stdin);
 		user.password[strcspn(user.password, "\n")] = 0;
 		if (strlen(user.password) == 0)
@@ -863,7 +863,7 @@ void makeBorrow(int bookID, int userID)
 {
 	Borrow currentBorrow;
 	FILE *fp;
-	FILE *Idp = fopen("UniqueBorrowID.dat", "w");
+	FILE *Idp = fopen("UniqueBorrowID.dat", "r+");
 	if (Idp == NULL)
 	{
 		printf("Dosya acilamadi");
@@ -874,6 +874,7 @@ void makeBorrow(int bookID, int userID)
 		fscanf(Idp, "%d", &ID);
 		currentBorrow.borrowId = ID;
 		ID++;
+		rewind(Idp);
 		fprintf(Idp, "%d", ID);
 		fclose(Idp);
 	}
@@ -972,22 +973,22 @@ void removeBorrow(int bookID, int userID)
 	}
 	else
 	{
-		printf("'%d' ID degerine sahip kitap iade edilemedi.\n", bookID);
+		printf("'%d' ID degerine sahip kitap iade edilemedi.(Odunc alinmamis olabilir!)\n", bookID);
 		remove("temp_borrows.dat");
 	}
 }
 void updateBook()
 {
-	char searchName[250];
+	char searchID[250];
 	char buffer[512];
 	Book currentBook;
 	bool bookFound = false;
 	int choice;
 	char newValue[100];
 
-	printf("Guncellemek istediginiz kitabin ismini girin: ");
-	fgets(searchName, sizeof(searchName), stdin);
-	searchName[strcspn(searchName, "\n")] = 0;
+	printf("Guncellemek istediginiz kitabin id degerini girin: ");
+	fgets(searchID, sizeof(searchID), stdin);
+	searchID[strcspn(searchID, "\n")] = 0;
 
 	FILE *fp = fopen("Books.dat", "r");
 	FILE *tempFp = fopen("temp_books.dat", "w");
@@ -1024,7 +1025,7 @@ void updateBook()
 			continue;
 		}
 		strcpy(currentBook.bookName, bookname);
-		if (strcmp(currentBook.bookName, searchName) == 0)
+		if (atoi(searchID)==currentBook.bookId)
 		{
 			bookFound = 1;
 			printf("Kitap bulundu ID:%d, Ad: %s", currentBook.bookId, currentBook.bookName);
@@ -1124,7 +1125,7 @@ void updateBook()
 	}
 	else
 	{
-		printf("'%s' adinda bir kitap bulunamadi.\n", searchName);
+		printf("'%s' ID degerine sahip bir kitap bulunamadi.\n", searchID);
 		remove("temp_books.dat");
 	}
 }
@@ -1353,7 +1354,7 @@ void returnBook(int userId)
 }
 void viewBorrowedBook(int userId)
 {
-	// int isUserBook= 0; KULLANILACAK
+	int anybook = 0;
 	FILE *fp = fopen("Books.dat", "r");
 	if (fp == NULL)
 	{
@@ -1383,11 +1384,13 @@ void viewBorrowedBook(int userId)
 		if (userIdFromFile == userId)
 		{
 			printf("ID: %d, Kitap Adi: %s, Yazar: %s, Kategori: %s\n", currentBookId, bookname, author, ctgry);
-			// isUserBook = true; KULLANILACAK
+			anybook = 1;
 			continue;
 		}
 	}
 	fclose(fp);
+	if (anybook == 0)
+		printf("Odunc alinmis kitap bulunamadi!!!\n");
 }
 void viewOutdatedBooks()
 {
@@ -1547,6 +1550,7 @@ void saveOutDatedBooks()
 				// fclose(atf);
 
 				fprintf(odb, "%d,%d,%d,%s,%s\n", currentBorrow.bookId, currentBorrow.userId, currentBorrow.borrowId, currentBorrow.borrowDate, currentBorrow.returnDate);
+				printf("Kullanici basarili bir sekilde uyarildi!\n");
 			}
 		}
 	}
@@ -1559,7 +1563,7 @@ void GiveAttention(int userID)
 	Borrow currentBorrow;
 
 	FILE *fp = fopen("OutDatedBooks.dat", "r");
-	FILE *tempf = fopen("tempoutdatedbooks.dat","w");
+	FILE *tempf = fopen("tempoutdatedbooks.dat", "w");
 
 	if (fp == NULL || tempf == NULL)
 	{
@@ -1568,7 +1572,7 @@ void GiveAttention(int userID)
 			fclose(fp); // Eğer fp açıldıysa kapat
 		if (tempf)
 			fclose(tempf); // Eğer tempf açıldıysa kapat
-		return;			// Fonksiyondan çık
+		return;			   // Fonksiyondan çık
 	}
 
 	while (fgets(buffer, sizeof(buffer), fp) != NULL)
@@ -1622,8 +1626,9 @@ void GiveAttention(int userID)
 				{
 					printf("%d ID degerine sahip kitabin teslim suresi %li gun gecti!!\n", currentBorrow.bookId, howmanydate);
 				}
-				else{
-				fprintf(tempf,"%s",originalLine);
+				else
+				{
+					fprintf(tempf, "%s", originalLine);
 				}
 			}
 		}
@@ -1631,16 +1636,20 @@ void GiveAttention(int userID)
 	fclose(fp);
 	fclose(tempf);
 
-	if(remove("OutDatedBooks.dat")==0){
-		if(rename("tempoutdatedbooks.dat","OutDatedBooks.dat")==0){
-			printf("dosya yeniden adlandirildi!");
+	if (remove("OutDatedBooks.dat") == 0)
+	{
+		if (rename("tempoutdatedbooks.dat", "OutDatedBooks.dat") == 0)
+		{
+			// printf("dosya yeniden adlandirildi!");
 		}
-		else{
-			printf("dosya yeniden adlandirilamadi!");
+		else
+		{
+			// printf("dosya yeniden adlandirilamadi!");
 		}
 	}
-	else{
-		printf("dosya silinemedi!");		
+	else
+	{
+		// printf("dosya silinemedi!");
 	}
 }
 void adminChoose(int choice)
