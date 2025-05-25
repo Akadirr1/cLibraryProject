@@ -282,7 +282,7 @@ void searchBookByName()
 			else
 				currentBook.returnDate[0] = '\0';
 
-			printf("ID: %d, Kitap Adi: %s, Yazar: %s, Kategori: %s\n", currentBook.bookId, currentBook.bookName, currentBook.author, currentBook.ctgry);
+			printf("Kitap ID: %d, Kitap Adi: %s, Yazar: %s, Kategori: %s\n", currentBook.bookId, currentBook.bookName, currentBook.author, currentBook.ctgry);
 			if (currentBook.taken)
 			{
 				printf("Durum: Odunc Alinmis\n");
@@ -370,7 +370,7 @@ void searchBookByAuthor()
 			else
 				currentBook.returnDate[0] = '\0';
 
-			printf("ID: %d\n", currentBook.bookId);
+			printf("Kitap ID: %d\n", currentBook.bookId);
 			printf("Kitap Adi: %s\n", currentBook.bookName);
 			printf("Yazar: %s\n", currentBook.author);
 			printf("Kategori: %s\n", currentBook.ctgry);
@@ -461,7 +461,7 @@ void searchBookByCategory()
 			else
 				currentBook.returnDate[0] = '\0';
 
-			printf("ID: %d\n", currentBook.bookId);
+			printf("Kitap ID: %d\n", currentBook.bookId);
 			printf("Kitap Adi: %s\n", currentBook.bookName);
 			printf("Yazar: %s\n", currentBook.author);
 			printf("Kategori: %s\n", currentBook.ctgry);
@@ -552,7 +552,7 @@ void registerUser()
 		return;
 	}
 	User user;
-	printf("Enter name: \n");
+	printf("Isim giriniz: \n");
 	fgets(user.name, sizeof(user.name), stdin);
 	user.name[strcspn(user.name, "\n")] = 0;
 	if (strlen(user.name) == 0)
@@ -561,7 +561,7 @@ void registerUser()
 		printf("Kayit basarisiz!!!");
 		return;
 	}
-	printf("Enter email: \n");
+	printf("Email giriniz: \n");
 	fgets(user.email, sizeof(user.email), stdin);
 	user.email[strcspn(user.email, "\n")] = 0;
 	if (strlen(user.email) == 0)
@@ -572,11 +572,11 @@ void registerUser()
 	}
 	if (isEmailRegistered(user.email) == true)
 	{
-		printf("Email already registered\n");
+		printf("Email zaten kayitli!!!\n");
 	}
 	else
 	{
-		printf("Enter password: ");
+		printf("Parola girin : ");
 		fgets(user.password, sizeof(user.password), stdin);
 		user.password[strcspn(user.password, "\n")] = 0;
 		if (strlen(user.password) == 0)
@@ -620,7 +620,7 @@ void registerUser()
 		}
 		fprintf(fp, "%d,%s,%s,%s,%d \n", user.userId, user.name, user.email, user.password, user.isAdmin);
 		fclose(fp);
-		printf("User registered successfully!\n");
+		printf("Kullanici kaydi basarili!\n");
 	}
 }
 int loginUser(int *islogin, int *isAdmin)
@@ -628,10 +628,10 @@ int loginUser(int *islogin, int *isAdmin)
 	char email[250];
 	char password[250];
 	bool emailFound = false;
-	printf("Enter your email: ");
+	printf("Email : ");
 	fgets(email, sizeof(email), stdin);
 
-	printf("Enter your password: ");
+	printf("Parola : ");
 	fgets(password, sizeof(password), stdin);
 
 	email[strcspn(email, "\n")] = 0;
@@ -683,11 +683,11 @@ int loginUser(int *islogin, int *isAdmin)
 	fclose(fp);
 	if (!emailFound)
 	{
-		printf("Email not found\n");
+		printf("Email Bulunamadi!\n");
 	}
 	else if (*islogin == 0)
 	{
-		printf("Password is incorrect\n");
+		printf("Parola yanlis!\n");
 	}
 
 	return -1;
@@ -701,11 +701,11 @@ void addBook()
 		return;
 	}
 	Book book;
-	printf("Enter book name: ");
+	printf("Kitap adi giriniz : ");
 	fgets(book.bookName, sizeof(book.bookName), stdin);
-	printf("Enter author name: ");
+	printf("Yazar adi giriniz: ");
 	fgets(book.author, sizeof(book.author), stdin);
-	printf("Enter category: ");
+	printf("Katagori giriniz: ");
 	fgets(book.ctgry, sizeof(book.ctgry), stdin);
 	book.bookName[strcspn(book.bookName, "\n")] = 0;
 	book.author[strcspn(book.author, "\n")] = 0;
@@ -743,7 +743,7 @@ void addBook()
 	}
 	fprintf(fp, "%d,%s,%s,%s,%d,%d,%d,%d \n", book.bookId, book.bookName, book.author, book.ctgry, book.taken, book.userId, 0, 0);
 	fclose(fp);
-	printf("Book adding successfully!\n");
+	printf("Kitap ekleme islemi basarili!\n");
 }
 void updateTakenBook(int ID, int userID, int take)
 {
@@ -836,12 +836,14 @@ void updateTakenBook(int ID, int userID, int take)
 	{
 		if (remove("Books.dat") != 0)
 		{
-			printf("Eski Books.dat dosyasi silinemedi!\n");
+			printf("Dosya islem hatasi olustu!!!");
+			// printf("Eski Books.dat dosyasi silinemedi!\n");
 		}
 		else
 		{
 			if (rename("temp_books.dat", "Books.dat") != 0)
 			{
+				printf("Dosya islem hatasi olustu!!!");
 				// printf("Gecici dosya Books.dat olarak yeniden adlandirilamadi!\n");
 			}
 			else
@@ -855,7 +857,7 @@ void updateTakenBook(int ID, int userID, int take)
 		printf("'%d' ID'sine sahip bir kitap bulunamadi.\n", ID);
 		if (remove("temp_books.dat") != 0)
 		{
-			perror("Gecici dosya silme hatasi");
+			printf("Dosya islem hatasi olustu!!!");
 		}
 	}
 }
@@ -957,12 +959,14 @@ void removeBorrow(int bookID, int userID)
 	{
 		if (remove("Borrows.dat") != 0)
 		{
-			printf("Eski Borrows.dat dosyasi silinemedi!\n");
+			printf("Dosya islem hatasi olustu!!!");
+			// printf("Eski Borrows.dat dosyasi silinemedi!\n");
 		}
 		else
 		{
 			if (rename("temp_borrows.dat", "Borrows.dat") != 0)
 			{
+				printf("Dosya islem hatasi olustu!!!");
 				// printf("Gecici dosya Borrows.dat olarak yeniden adlandirilamadi!\n");
 			}
 			else
@@ -1025,7 +1029,7 @@ void updateBook()
 			continue;
 		}
 		strcpy(currentBook.bookName, bookname);
-		if (atoi(searchID)==currentBook.bookId)
+		if (atoi(searchID) == currentBook.bookId)
 		{
 			bookFound = 1;
 			printf("Kitap bulundu ID:%d, Ad: %s", currentBook.bookId, currentBook.bookName);
@@ -1078,12 +1082,15 @@ void updateBook()
 			{
 			case 1:
 				strcpy(currentBook.bookName, newValue);
+				printf("Guncelleme basarili.\n");
 				break;
 			case 2:
 				strcpy(currentBook.author, newValue);
+				printf("Guncelleme basarili.\n");
 				break;
 			case 3:
 				strcpy(currentBook.ctgry, newValue);
+				printf("Guncelleme basarili.\n");
 				break;
 			default:
 				printf("Gecersiz Secim.");
@@ -1109,12 +1116,14 @@ void updateBook()
 	{
 		if (remove("Books.dat") != 0)
 		{
+			printf("Dosya islem hatasi olustu!!!");
 			// printf("Eski Books.dat dosyasi silinemedi!\n");
 		}
 		else
 		{
 			if (rename("temp_books.dat", "Books.dat") != 0)
 			{
+				printf("Dosya islem hatasi olustu!!!");
 				// printf("Gecici dosya Books.dat olarak yeniden adlandirilamadi!\n");
 			}
 			else
@@ -1232,6 +1241,7 @@ void deleteBook()
 		{
 			if (rename("temp_books.dat", "Books.dat") != 0)
 			{
+				printf("Dosya islem hatasi olustu!!!");
 				// printf("Gecici dosya Books.dat olarak yeniden adlandirilamadi!\n");
 			}
 			else
@@ -1644,11 +1654,13 @@ void GiveAttention(int userID)
 		}
 		else
 		{
+			printf("Dosya islem hatasi olustu!!!");
 			// printf("dosya yeniden adlandirilamadi!");
 		}
 	}
 	else
 	{
+		printf("Dosya islem hatasi olustu!!!");
 		// printf("dosya silinemedi!");
 	}
 }
@@ -1675,10 +1687,10 @@ void adminChoose(int choice)
 		saveOutDatedBooks();
 		break;
 	case 7:
-		printf("Logging out...\n");
+		printf("Cikis yapiliyor...\n");
 		break;
 	default:
-		printf("Invalid choice. Please try again.\n");
+		printf("Hatali secim! Lutfen tekrar deneyin.\n");
 	}
 }
 void userChoose(int userid)
@@ -1689,11 +1701,11 @@ void userChoose(int userid)
 	while (choice != -1)
 	{
 		GiveAttention(userid);
-		printf("1. Search Book\n");
-		printf("2. Borrow Book\n");
-		printf("3. Return Book\n");
-		printf("4. View Borrowed Books\n");
-		printf("5. Logout\n");
+		printf("1. Kitap ara\n");
+		printf("2. Kitap odunc al\n");
+		printf("3. Kitap iade et\n");
+		printf("4. Odunc alinmis kitaplari goruntule\n");
+		printf("5. Cikis yap\n");
 		fgets(choiceStr, sizeof(choiceStr), stdin);
 		choice = atoi(choiceStr);
 		switch (choice)
@@ -1712,10 +1724,10 @@ void userChoose(int userid)
 			break;
 		case 5:
 			choice = -1;
-			printf("Logging out...\n");
+			printf("Cikis yapiliyor...\n");
 			break;
 		default:
-			printf("Invalid choice. Please try again.\n");
+			printf("Hatali secim! Lutfen tekrar deneyin.\n");
 			break;
 		}
 	}
@@ -1726,10 +1738,10 @@ int main()
 	char choiceStr[10];
 	while (choice != 3)
 	{
-		printf("Welcome to the Library System\n");
-		printf("1. Register\n");
-		printf("2. Login\n");
-		printf("3. Exit\n");
+		printf("Kutuphane sistemine hosgeldiniz\n");
+		printf("1. Kayit ol\n");
+		printf("2. Giris yap\n");
+		printf("3. Programdan Cik\n");
 		fgets(choiceStr, sizeof(choiceStr), stdin);
 		choice = atoi(choiceStr);
 		if (choice == 1)
@@ -1742,21 +1754,20 @@ int main()
 			int userid = loginUser(&islogin, &isAdmin);
 			if (islogin == 1)
 			{
-				printf("Login successful!\n");
-				printf("Welcome to the library system!\n");
+				printf("Giris basarili!\n");
 				if (isAdmin == 1)
 				{
 					int adminChoice = 0;
 					do
 					{
-						printf("You are an admin\n choose the admin functions\n");
-						printf("1. Add User\n");
-						printf("2. Add Book\n");
-						printf("3. Update Book\n");
-						printf("4. Delete Book\n");
-						printf("5. View outDate Books\n");
-						printf("6. Attempt Users\n");
-						printf("7. Logout\n");
+						printf("Rolunuz admin\n");
+						printf("1. Kullanici ekle\n");
+						printf("2. Kitap ekle\n");
+						printf("3. Kitap guncelle\n");
+						printf("4. Kitap sil\n");
+						printf("5. Teslim tarihi gecmis kitaplari goruntule\n");
+						printf("6. Kullanicilari uyar!\n");
+						printf("7. Cikis yap\n");
 
 						fgets(choiceStr, sizeof(choiceStr), stdin);
 						adminChoice = atoi(choiceStr);
@@ -1767,23 +1778,23 @@ int main()
 				}
 				else
 				{
-					printf("You are a user\n");
+					printf("Rolunuz kullanici\n");
 					userChoose(userid);
 				}
 			}
 			else
 			{
-				printf("Login failed!\n");
+				printf("Giris basarisiz!\n");
 			}
 		}
 		else if (choice == 3)
 		{
-			printf("Exiting...\n");
+			printf("Cikis yapiliyor...\n");
 			return 0;
 		}
 		else
 		{
-			printf("Invalid choice. Please try again.\n");
+			printf("Hatali secim! Lutfen tekrar deneyin.\n");
 		}
 	}
 }
