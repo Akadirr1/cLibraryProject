@@ -103,18 +103,18 @@ int howManyBooksAdded()
 void todaysDate(char *buffer, size_t size)
 {
 	time_t t;
-	time(&t);
+	time(&t); // tnin içine saniyeyi yazıyoruz
 
 	struct tm *zaman_bilgisi;	   // Bu time.h icerisinde tanimli bir structmis.
 	zaman_bilgisi = localtime(&t); // 1900den bu gune gecen saniyeyi structtaki yil gun saat formatina ceviriyor.
 
-	strftime(buffer, size, "%Y-%m-%d", zaman_bilgisi);
+	strftime(buffer, size, "%Y-%m-%d", zaman_bilgisi);//boyutu size olan buffera hangi formatta hangi verileri istiyorsak onu yazmamızı sağlar
 }
 void later15Day(char *buffer, size_t size)
 {
 
 	time_t t;
-	time(&t);
+	time(&t);					   // tnin içine saniyeyi yazıyoruz
 	t += 1296000;				   // 15 gun kac saniye ise onu ekledim
 	struct tm *zaman_bilgisi;	   // Bu time.h icerisinde tanimli bir structmis.
 	zaman_bilgisi = localtime(&t); // 1970 ten bu gune gecen saniyeyi structtaki yil gun saat formatina ceviriyor.
@@ -152,7 +152,7 @@ int isOutdate(char *returnDate, char *currentDate, long int *howmany)
 }
 int isTaken(int ID)
 {
-	char buffer[512];		// used
+	char buffer[512]; // used
 
 	FILE *fp = fopen("Books.dat", "r");
 	if (fp == NULL)
@@ -398,7 +398,7 @@ void searchBookByCategory()
 		if (bookname == NULL)
 			continue;
 
-		if (strstr(ctgry, searchName) != NULL)//aranan katagorinin herhangi bir kategori adıyla eşleşip eşleşmediğini burda kontrol ediyorum
+		if (strstr(ctgry, searchName) != NULL) // aranan katagorinin herhangi bir kategori adıyla eşleşip eşleşmediğini burda kontrol ediyorum
 		{
 			bookFound = true;
 
@@ -452,7 +452,7 @@ void searchBookByCategory()
 		printf("'%s' kategorisinde bir kitap bulunamadi.\n", searchName);
 	}
 }
-void searchBook()//bu fonksiyon kullanici arama yapmak istediğinde nasıl arama yapma istediğini alıp ona göre gerekli fonskiyonu çağırır.
+void searchBook() // bu fonksiyon kullanici arama yapmak istediğinde nasıl arama yapma istediğini alıp ona göre gerekli fonskiyonu çağırır.
 {
 	int choice;
 	char choiceStr[10];
@@ -479,7 +479,7 @@ void searchBook()//bu fonksiyon kullanici arama yapmak istediğinde nasıl arama
 		break;
 	}
 }
-bool isEmailRegistered(const char *email)//aynı emailin birden fazla kez kaydını önlemek adına burda kontrol ediğ bool tipinde dönüş alıyorum
+bool isEmailRegistered(const char *email) // aynı emailin birden fazla kez kaydını önlemek adına burda kontrol ediğ bool tipinde dönüş alıyorum
 {
 	const char delimiter[2] = ",";
 	char buffer[512];
@@ -516,8 +516,8 @@ bool isEmailRegistered(const char *email)//aynı emailin birden fazla kez kaydı
 }
 void registerUser()
 {
-	int ManyUser = howManyUserRegistered();//kullanici sayisini çekiyorum 
-	if (ManyUser >= 100)//eğer 100den fazlaysa izin vermiyorum
+	int ManyUser = howManyUserRegistered(); // kullanici sayisini çekiyorum
+	if (ManyUser >= 100)					// eğer 100den fazlaysa izin vermiyorum
 	{
 		printf("100 Kullanicidan fazla kayit olamaz\n");
 		return;
@@ -562,7 +562,7 @@ void registerUser()
 		user.isAdmin = false;
 
 		FILE *fp;
-		FILE *Idp = fopen("UniqueUserID.dat", "r");//bu dosyada her kullaniciya özel bir ID sağlamak için 1den başlamak üzere değer tutuyorum 19IDsine sahip kullanici silinirse bile kimse bir daha o değeri alamıyor ve karışıklıkların önüne geçiyorum.
+		FILE *Idp = fopen("UniqueUserID.dat", "r"); // bu dosyada her kullaniciya özel bir ID sağlamak için 1den başlamak üzere değer tutuyorum 19IDsine sahip kullanici silinirse bile kimse bir daha o değeri alamıyor ve karışıklıkların önüne geçiyorum.
 		if (Idp == NULL)
 		{
 			printf("Dosya acilamadi");
@@ -571,8 +571,8 @@ void registerUser()
 		else
 		{
 			fscanf(Idp, "%d", &ID);
-			user.userId = ID;//özel ID değerini alıyorum
-			ID++;//bir sonraki işlem için IDyi bir arttırıp dosyaya yazıyorum.
+			user.userId = ID; // özel ID değerini alıyorum
+			ID++;			  // bir sonraki işlem için IDyi bir arttırıp dosyaya yazıyorum.
 			fclose(Idp);
 		}
 		Idp = fopen("UniqueUserID.dat", "w");
@@ -618,9 +618,9 @@ int loginUser(int *islogin, int *isAdmin)
 		return -1;
 	}
 	*islogin = 0;
-	while (fgets(buffer, sizeof(buffer), fp) != NULL)//bu fonksiyon kullanicinin giriş yapması için girdiği verilerle dosyamızdaki verileri karşılaştırıyor ve global olarak tanımladığım islogin ve isadmin değişkenlerimin bellekteki adresine erişerek direkt değerleri değiştiriyor. Pointer yapısı bu noktada çok önemli
+	while (fgets(buffer, sizeof(buffer), fp) != NULL) // bu fonksiyon kullanicinin giriş yapması için girdiği verilerle dosyamızdaki verileri karşılaştırıyor ve global olarak tanımladığım islogin ve isadmin değişkenlerimin bellekteki adresine erişerek direkt değerleri değiştiriyor. Pointer yapısı bu noktada çok önemli
 	{
-		buffer[strcspn(buffer, "\n")] = 0;//fgetsin eklediği newline karakterini null yapıyorum
+		buffer[strcspn(buffer, "\n")] = 0; // fgetsin eklediği newline karakterini null yapıyorum
 
 		char *id = strtok(buffer, delimiter);
 		char *name = strtok(NULL, delimiter);
@@ -663,9 +663,9 @@ int loginUser(int *islogin, int *isAdmin)
 
 	return -1;
 }
-void addBook()//yeni kitap ekleme fonksiyonu
+void addBook() // yeni kitap ekleme fonksiyonu
 {
-	int ManyBooks = howManyBooksAdded();//500 kitap sınırı kontrol ediliyor
+	int ManyBooks = howManyBooksAdded(); // 500 kitap sınırı kontrol ediliyor
 	if (ManyBooks >= 500)
 	{
 		printf("500 kitaptan fazlasi eklenemez!!\n");
@@ -757,7 +757,7 @@ void updateTakenBook(int ID, int userID, int take)
 			continue;
 		}
 		strcpy(currentBook.bookName, bookname);
-		if (currentBook.bookId == ID)//eğer okuduğumuz satırdaki ıd değerleri eşleşirse o satırın yerine güncel verilerden oluşan satırı yazıyoruz
+		if (currentBook.bookId == ID) // eğer okuduğumuz satırdaki ıd değerleri eşleşirse o satırın yerine güncel verilerden oluşan satırı yazıyoruz
 		{
 			bookFound = true;
 			if (author)
@@ -793,7 +793,7 @@ void updateTakenBook(int ID, int userID, int take)
 					currentBook.ctgry, currentBook.taken, currentBook.userId,
 					currentBook.borrowDate, currentBook.returnDate);
 		}
-		else//eğer okuduğumuz satırdaki ıd değerleri eşleşmez ise originallineı direkt dosyaya yazıp sonraki satıra bakıyoruz!!!
+		else // eğer okuduğumuz satırdaki ıd değerleri eşleşmez ise originallineı direkt dosyaya yazıp sonraki satıra bakıyoruz!!!
 		{
 			// Aranan kitap bu değilse, orijinal satırı olduğu gibi geçici dosyaya yaz
 			fprintf(tempFp, "%s", originalLine);
@@ -832,7 +832,7 @@ void updateTakenBook(int ID, int userID, int take)
 		}
 	}
 }
-void makeBorrow(int bookID, int userID)//aldığımız book ID VE userıd değerlerini kullanarak yeni ödünç alma işlemi oluşturuyoruz
+void makeBorrow(int bookID, int userID) // aldığımız book ID VE userıd değerlerini kullanarak yeni ödünç alma işlemi oluşturuyoruz
 {
 	Borrow currentBorrow;
 	FILE *fp;
@@ -853,8 +853,8 @@ void makeBorrow(int bookID, int userID)//aldığımız book ID VE userıd değer
 	}
 	currentBorrow.userId = userID;
 	currentBorrow.bookId = bookID;
-	todaysDate(currentBorrow.borrowDate, sizeof(currentBorrow.borrowDate));//işlem yapılan tarihi kaydediyoruz
-	later15Day(currentBorrow.returnDate, sizeof(currentBorrow.borrowDate));//15 gün süre olduğu için işlem tarihinden 15 gün sonrasını hesaplıyoruz
+	todaysDate(currentBorrow.borrowDate, sizeof(currentBorrow.borrowDate)); // işlem yapılan tarihi kaydediyoruz
+	later15Day(currentBorrow.returnDate, sizeof(currentBorrow.borrowDate)); // 15 gün süre olduğu için işlem tarihinden 15 gün sonrasını hesaplıyoruz
 	fp = fopen("Borrows.dat", "a+");
 	if (fp == NULL)
 	{
@@ -864,7 +864,7 @@ void makeBorrow(int bookID, int userID)//aldığımız book ID VE userıd değer
 	fprintf(fp, "%d,%d,%d,%s,%s \n", currentBorrow.borrowId, currentBorrow.userId, currentBorrow.bookId, currentBorrow.borrowDate, currentBorrow.returnDate);
 	fclose(fp);
 }
-void removeBorrow(int bookID, int userID)//aldığımız parametreler ile istenen satırı bulup o satırı atlayarak diğer satırları olduğu gibi yazıyoruz
+void removeBorrow(int bookID, int userID) // aldığımız parametreler ile istenen satırı bulup o satırı atlayarak diğer satırları olduğu gibi yazıyoruz
 {
 	char buffer[512];
 	Borrow currentBorrow;
@@ -952,7 +952,7 @@ void removeBorrow(int bookID, int userID)//aldığımız parametreler ile istene
 		remove("temp_borrows.dat");
 	}
 }
-void updateBook()//güncellenecek kitabı bulup güncellenmek istenen kısmı güncelliyoruz!
+void updateBook() // güncellenecek kitabı bulup güncellenmek istenen kısmı güncelliyoruz!
 {
 	char searchID[512];
 	char buffer[512];
@@ -1109,7 +1109,7 @@ void updateBook()//güncellenecek kitabı bulup güncellenmek istenen kısmı g�
 		remove("temp_books.dat");
 	}
 }
-void deleteBook()//silinecek kitabın id değerini alarak bulunan satırı yazmadan diğer satırları yazıp silme işlemini yapıyoruz
+void deleteBook() // silinecek kitabın id değerini alarak bulunan satırı yazmadan diğer satırları yazıp silme işlemini yapıyoruz
 {
 	char searchName[250];
 	char buffer[512];
@@ -1227,7 +1227,7 @@ void deleteBook()//silinecek kitabın id değerini alarak bulunan satırı yazma
 		remove("temp_books.dat");
 	}
 }
-void borrowBook(int userId)//makeborrow ve update taken book fonksiyonlarını kullanarak yeni ödünç işlemi gerçekleştirir.
+void borrowBook(int userId) // makeborrow ve update taken book fonksiyonlarını kullanarak yeni ödünç işlemi gerçekleştirir.
 {
 	int bookId;
 	char bookIdStr[100];
@@ -1263,7 +1263,7 @@ void borrowBook(int userId)//makeborrow ve update taken book fonksiyonlarını k
 		// KITAP BULUNAMADI
 	}
 }
-void returnBook(int userId)//alınan kitabı eğer userId eşleşiyorsa iade etmemizi sağlar.
+void returnBook(int userId) // alınan kitabı eğer userId eşleşiyorsa iade etmemizi sağlar.
 {
 	int bookId;
 	char bookIdStr[100];
@@ -1333,7 +1333,7 @@ void returnBook(int userId)//alınan kitabı eğer userId eşleşiyorsa iade etm
 		// KITAP BULUNAMADI
 	}
 }
-void viewBorrowedBook(int userId)//Kullanıcının ödünç aldığı kitapları görüntülemesini sağlar 
+void viewBorrowedBook(int userId) // Kullanıcının ödünç aldığı kitapları görüntülemesini sağlar
 {
 	int anybook = 0;
 	FILE *fp = fopen("Books.dat", "r");
@@ -1373,7 +1373,7 @@ void viewBorrowedBook(int userId)//Kullanıcının ödünç aldığı kitapları
 	if (anybook == 0)
 		printf("Odunc alinmis kitap bulunamadi!!!\n");
 }
-void viewOutdatedBooks()//adminin gecikmiş kitapları görmesini sağlar
+void viewOutdatedBooks() // adminin gecikmiş kitapları görmesini sağlar
 {
 	char buffer[512];
 	Borrow currentBorrow;
@@ -1451,7 +1451,7 @@ void viewOutdatedBooks()//adminin gecikmiş kitapları görmesini sağlar
 	}
 	fclose(fp);
 }
-void saveOutDatedBooks()//adminin gecikmiş kitapların sahiplerine uyarı göndermesini sağlar
+void saveOutDatedBooks() // adminin gecikmiş kitapların sahiplerine uyarı göndermesini sağlar
 {
 	char buffer[512];
 	Borrow currentBorrow;
@@ -1536,7 +1536,7 @@ void saveOutDatedBooks()//adminin gecikmiş kitapların sahiplerine uyarı gönd
 	fclose(fp);
 	fclose(odb);
 }
-void GiveAttention(int userID)//kullanici giris yaptığında bu fonksiyon çalışır ve ona ait geciken kitapları uyarı olarak verir ardından dosyadan siler uyarıyı bu sayede kullanici ayni uyarıyı defalarca görmez
+void GiveAttention(int userID) // kullanici giris yaptığında bu fonksiyon çalışır ve ona ait geciken kitapları uyarı olarak verir ardından dosyadan siler uyarıyı bu sayede kullanici ayni uyarıyı defalarca görmez
 {
 	char buffer[512];
 	Borrow currentBorrow;
@@ -1635,7 +1635,7 @@ void GiveAttention(int userID)//kullanici giris yaptığında bu fonksiyon çal�
 		// printf("dosya silinemedi!");
 	}
 }
-void adminChoose(int choice)//adminin yaptğı seçime göre gerekli fonksiyonları çağırır
+void adminChoose(int choice) // adminin yaptğı seçime göre gerekli fonksiyonları çağırır
 {
 	switch (choice)
 	{
@@ -1664,7 +1664,7 @@ void adminChoose(int choice)//adminin yaptğı seçime göre gerekli fonksiyonla
 		printf("Hatali secim! Lutfen tekrar deneyin.\n");
 	}
 }
-void userChoose(int userid)//kullanicin yaptğı seçime göre gerekli fonksiyonları çağırır
+void userChoose(int userid) // kullanicin yaptğı seçime göre gerekli fonksiyonları çağırır
 {
 	int choice = 0;
 	char choiceStr[10];
