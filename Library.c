@@ -196,7 +196,7 @@ int isTaken(int ID)
 		if (ID == atoi(bookid))
 		{
 			bookFound = true;
-			if (atoi(taken) && taken != NULL)
+			if (taken != NULL && atoi(taken))
 			{
 				fclose(fp);
 				return 1;
@@ -983,12 +983,12 @@ void removeBorrow(int bookID, int userID)
 }
 void updateBook()
 {
-	char searchID[250];
+	char searchID[512];
 	char buffer[512];
 	Book currentBook;
 	bool bookFound = false;
 	int choice;
-	char newValue[100];
+	char newValue[512];
 
 	printf("Guncellemek istediginiz kitabin id degerini girin: ");
 	fgets(searchID, sizeof(searchID), stdin);
@@ -1412,9 +1412,7 @@ void viewOutdatedBooks()
 	if (fp == NULL)
 	{
 		printf("Dosya acma hatasi!\n");
-		if (fp)
-			fclose(fp); // Eğer fp açıldıysa kapat
-		return;			// Fonksiyondan çık
+		return; // Fonksiyondan çık
 	}
 
 	while (fgets(buffer, sizeof(buffer), fp) != NULL)
@@ -1613,6 +1611,7 @@ void GiveAttention(int userID)
 			strcpy(currentBorrow.borrowDate, borrowDate_str);
 		else
 			strcpy(currentBorrow.borrowDate, "\0");
+
 		if (returnDate_str)
 		{
 			strcpy(currentBorrow.returnDate, returnDate_str);
@@ -1654,6 +1653,7 @@ void GiveAttention(int userID)
 		}
 		else
 		{
+			remove("tempoutdatedbooks.dat");
 			printf("Dosya islem hatasi olustu!!!");
 			// printf("dosya yeniden adlandirilamadi!");
 		}
